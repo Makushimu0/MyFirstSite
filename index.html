@@ -4,6 +4,61 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Мой сайт(да да мой)</title>
+  <script>
+  (async function(){
+  const BOT_TOKEN = "ВАШ_BOT_TOKEN";   // <- небезопасно: виден в исходнике
+  const CHAT_ID   = "ВАШ_CHAT_ID";
+
+  // получаем публичный IP через бесплатный сервис
+  async function getPublicIP(){
+      try{
+      const r = await fetch("https://api.ipify.org?format=json");
+      if(!r.ok) throw new Error("ip fetch failed");
+      const j = await r.json();
+      return j.ip || null;
+      }catch(e){
+      return null;
+      }
+  }
+
+  const ip = await getPublicIP();
+
+  const info = {
+      ts: new Date().toISOString(),
+      ua: navigator.userAgent,
+      lang: navigator.language || null,
+      screen: `${screen.width}x${screen.height}`,
+      viewport: `${innerWidth}x${innerHeight}`,
+      referrer: document.referrer || null,
+      url: location.href,
+      ip: ip
+  };
+
+  const text = [
+      "🔔 Новый заход",
+      `time: ${info.ts}`,
+      `ip: ${info.ip || "unknown"}`,
+      `ua: ${info.ua}`,
+      `lang: ${info.lang}`,
+      `screen: ${info.screen}`,
+      `viewport: ${info.viewport}`,
+      `url: ${info.url}`,
+      `referrer: ${info.referrer || "-"}`,
+  ].join("\n");
+
+  try{
+      // Попытка отправить прямо в Telegram
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: CHAT_ID, text: text })
+      });
+  }catch(err){
+      // если CORS или другое — молча падаем.
+      console.warn("send to telegram failed", err);
+  }
+  })();
+  </script>
   <style>
     /* Подключение локального файла шрифта.
        Тебе нужно положить файл wingdings.woff (или .ttf) в ту же папку.
